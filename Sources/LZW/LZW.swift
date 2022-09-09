@@ -1,62 +1,86 @@
 // LZW.swift
 //
-// https://rosettacode.org/wiki/LZW_compression#Swift
+// Original from https://rosettacode.org/wiki/LZW_compression#Swift
+// Modified ny John Scott
 
 class LZW {
-    class func compress(_ uncompressed:String) -> [Int] {
-        var dict = [String : Int]()
+    enum LZWError<T>: Error {
+        case missingDictionaryElement(T)
+        case missingDictionaryIndex(Int)
+    }
+    
+    class func compress<T: Hashable>(_ uncompressed:[T], alphabet: [T]) throws -> [Int] {
+        guard uncompressed.count > 0 else { return [] }
         
-        for i in 0 ..< 256 {
-            let s = String(Unicode.Scalar(UInt8(i)))
-            dict[s] = i
+        var dictionary = [[T] : Int]()
+        for (i, s) in alphabet.enumerated() {
+            dictionary[[s]] = i
         }
-        
-        var dictSize = 256
-        var w = ""
+
+        var w = [T]()
         var result = [Int]()
         for c in uncompressed {
-            let wc = w + String(c)
-            if dict[wc] != nil {
+            let wc = w + [c]
+            if dictionary[wc] != nil {
                 w = wc
             } else {
-                result.append(dict[w]!)
-                dict[wc] = dictSize
-                dictSize += 1
-                w = String(c)
+                dictionary[wc] = dictionary.count
+                guard let wIndex = dictionary[w] else {
+                    throw LZWError.missingDictionaryElement(w)
+                }
+                result.append(wIndex)
+                w = [c]
             }
         }
         
-        if w != "" {
-            result.append(dict[w]!)
+        if !w.isEmpty {
+            guard let wIndex = dictionary[w] else {
+                throw LZWError.missingDictionaryElement(w)
+            }
+            result.append(wIndex)
         }
         return result
     }
     
-    class func decompress(_ compressed:[Int]) -> String? {
-        var dict = [Int : String]()
+    class func decompress<T: Hashable>(_ compressed:[Int], alphabet: [T]) throws -> [T] {
+        guard compressed.count > 0 else { return [] }
         
-        for i in 0 ..< 256 {
-            dict[i] = String(Unicode.Scalar(UInt8(i)))
+        var dictionary = [Int: [T]]()
+        
+        for (i, s) in alphabet.enumerated() {
+            dictionary[i] = [s]
         }
-        
-        var dictSize = 256
-        var w = String(Unicode.Scalar(UInt8(compressed[0])))
+
+        var w = [alphabet[compressed[0]]]
         var result = w
-        for k in compressed[1 ..< compressed.count] {
-            let entry : String
-            if let x = dict[k] {
+        for wIndex in compressed[1 ..< compressed.count] {
+            var entry = [T]()
+            if let x = dictionary[wIndex] {
                 entry = x
-            } else if k == dictSize {
-                entry = w + String(w[w.startIndex])
+            } else if wIndex == dictionary.count {
+                entry = w + [w[0]]
             } else {
-                return nil
+                throw LZWError<T>.missingDictionaryIndex(wIndex)
             }
             
             result += entry
-            dict[dictSize] = w + String(entry[entry.startIndex])
-            dictSize += 1
+            dictionary[dictionary.count] = w + [entry[0]]
             w = entry
         }
         return result
+    }
+}
+
+extension LZW {
+    class func compress(_ uncompressed:String) throws -> [Int] {
+        let uncompressed = uncompressed.utf8.map({$0})
+        let alphabet = (String.UTF8View.Element.min ... String.UTF8View.Element.max).map({$0})
+        return try compress(uncompressed, alphabet: alphabet)
+    }
+    
+    class func decompress(_ compressed:[Int]) throws -> String {
+        let alphabet = (String.UTF8View.Element.min ... String.UTF8View.Element.max).map({$0})
+        let uncompressed = try decompress(compressed, alphabet: alphabet)
+        return String(decoding: uncompressed, as: UTF8.self)
     }
 }

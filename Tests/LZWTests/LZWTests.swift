@@ -6,7 +6,7 @@ final class LZWTests: XCTestCase {
         
         let original = "TOBEORNOTTOBEORTOBEORNOT"
         
-        let compressed = LZW.compress(original)
+        let compressed = try LZW.compress(original)
         
         let decompressed = try XCTUnwrap(LZW.decompress(compressed))
 
