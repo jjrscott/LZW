@@ -3,84 +3,89 @@
 // Original from https://rosettacode.org/wiki/LZW_compression#Swift
 // Modified ny John Scott
 
-class LZW {
-    enum LZWError<T>: Error {
-        case missingDictionaryElement(T)
-        case missingDictionaryIndex(Int)
+enum LZW {
+    enum Unit<T: Equatable>: Equatable {
+        case element(T)
+        case index(Int)
     }
     
-    class func compress<T: Hashable>(_ uncompressed:[T], alphabet: [T]) throws -> [Int] {
-        guard uncompressed.count > 0 else { return [] }
+    enum Error: Swift.Error {
+        case missingIndex(Int)
+    }
+     
+    static func compress<T: Equatable>(_ uncompressed:[T]) -> [Unit<T>] {
+        var table = [[T]]()
+        var ω = [T]()
+        var output = [Unit<T>]()
         
-        var dictionary = [[T] : Int]()
-        for (i, s) in alphabet.enumerated() {
-            dictionary[[s]] = i
-        }
-
-        var w = [T]()
-        var result = [Int]()
-        for c in uncompressed {
-            let wc = w + [c]
-            if dictionary[wc] != nil {
-                w = wc
+        func code(_ ω: [T]) -> Unit<T> {
+            if let ωIndex = table.firstIndex(of: ω) {
+                return .index(ωIndex)
             } else {
-                dictionary[wc] = dictionary.count
-                guard let wIndex = dictionary[w] else {
-                    throw LZWError.missingDictionaryElement(w)
+                return .element(ω[0])
+            }
+        }
+        
+        for K in uncompressed {
+            let ωK = ω + [K]
+            if table.contains(ωK) || ω.count == 0  {
+                // K → prefix string ω or ωK → ω;
+                ω = ωK
+            } else {
+                // code(ω) → output
+                output.append(code(ω))
+                // ωK → string table;
+                table.append(ωK)
+                // K → ω;
+                ω = [K]
+            }
+        }
+        
+        if !ω.isEmpty {
+            // code(ω) → output
+            output.append(code(ω))
+        }
+        return output
+    }
+    
+    static func decompress<T: Equatable>(_ compressed:[Unit<T>]) throws -> [T] {
+        var table = [[T]]()
+        var ω = [T]()
+        var output = [T]()
+        
+        for code in compressed {
+            var entry: [T]
+            switch code {
+            case .element(let value):
+                entry = [value]
+            case .index(let ωIndex):
+                if ωIndex < table.count {
+                    entry = table[ωIndex]
+                } else if ωIndex == table.count {
+                    entry = ω + [ω[0]]
+                } else {
+                    throw Error.missingIndex(ωIndex)
                 }
-                result.append(wIndex)
-                w = [c]
-            }
-        }
-        
-        if !w.isEmpty {
-            guard let wIndex = dictionary[w] else {
-                throw LZWError.missingDictionaryElement(w)
-            }
-            result.append(wIndex)
-        }
-        return result
-    }
-    
-    class func decompress<T: Hashable>(_ compressed:[Int], alphabet: [T]) throws -> [T] {
-        guard compressed.count > 0 else { return [] }
-        
-        var dictionary = [Int: [T]]()
-        
-        for (i, s) in alphabet.enumerated() {
-            dictionary[i] = [s]
-        }
-
-        var w = [alphabet[compressed[0]]]
-        var result = w
-        for wIndex in compressed[1 ..< compressed.count] {
-            var entry = [T]()
-            if let x = dictionary[wIndex] {
-                entry = x
-            } else if wIndex == dictionary.count {
-                entry = w + [w[0]]
-            } else {
-                throw LZWError<T>.missingDictionaryIndex(wIndex)
             }
             
-            result += entry
-            dictionary[dictionary.count] = w + [entry[0]]
-            w = entry
+            output.append(contentsOf: entry)
+            if !ω.isEmpty {
+                table.append(ω + [entry[0]])
+            }
+            ω = entry
         }
-        return result
+        return output
     }
 }
 
-extension LZW {
-    class func compress(_ uncompressed:String) throws -> [Int] {
-        let uncompressed = uncompressed.utf8.map({$0})
-        let alphabet = (String.UTF8View.Element.min ... String.UTF8View.Element.max).map({$0})
-        return try compress(uncompressed, alphabet: alphabet)
-    }
-    
-    class func decompress(_ compressed:[Int]) throws -> String {
-        let alphabet = (String.UTF8View.Element.min ... String.UTF8View.Element.max).map({$0})
-        let uncompressed = try decompress(compressed, alphabet: alphabet)
-        return String(decoding: uncompressed, as: UTF8.self)
+
+extension LZW.Unit: CustomStringConvertible {
+    var description: String {
+        switch self {
+        case .element(let value):
+            return "pt(\(value))"
+        case .index(let index):
+            return "in(\(index))"
+        }
     }
 }
