@@ -1,7 +1,7 @@
 // LZW.swift
 //
 // Original from https://rosettacode.org/wiki/LZW_compression#Swift
-// Modified ny John Scott
+// Modified by John Scott
 
 enum LZW {
     enum Unit<T: Equatable>: Equatable {
