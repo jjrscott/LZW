@@ -61,7 +61,7 @@ enum LZW {
             case .index(let ωIndex):
                 if ωIndex < table.count {
                     entry = table[ωIndex]
-                } else if ωIndex == table.count {
+                } else if ωIndex == table.count && ω.count > 0 {
                     entry = ω + [ω[0]]
                 } else {
                     throw Error.missingIndex(ωIndex)
@@ -75,17 +75,5 @@ enum LZW {
             ω = entry
         }
         return output
-    }
-}
-
-
-extension LZW.Unit: CustomStringConvertible {
-    var description: String {
-        switch self {
-        case .element(let value):
-            return "pt(\(value))"
-        case .index(let index):
-            return "in(\(index))"
-        }
     }
 }

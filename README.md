@@ -12,9 +12,18 @@ From [Rosetta Code](https://rosettacode.org/wiki/LZW_compression):
 
 ```
 Initialize table to contain single-character strings
-Read first input character → prefix string ω
+Read first input character K:
+        K → prefix string ω;
 Step: Read next input character K
-         If no such K (input exhausted): code(ω) → output; EXIT
-         If ωK exists in string table: ωK → ω; repeat Step.
-         else ωK not in string table: code(ω) → output; ωK → string table; K → ω; repeat Step.
+         If no such K (input exhausted):
+                    code(ω) → output;
+                    EXIT.
+         If ωK exists in string table:
+                    ωK → ω;
+                    repeat Step.
+         else ωK not in string table:
+                    code(ω) → output;
+                    ωK → string table;
+                    K → ω;
+                    repeat Step.
 ```
