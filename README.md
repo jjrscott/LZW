@@ -12,20 +12,23 @@ This project's purpose was to educate me (jjrscott) on how the LZW works. While 
 
 ### Classic example
 
-For some reason all demos use `TOBEORNOTTOBEORTOBEORNOT` as the input string. 
+For some reason all demos use `TOBEORNOTTOBEORTOBEORNOT` as the input string. The following example takes a string and produces an integer array, just as the original demos do.
 
 ```swift
 import LZW
 
-let original = "TOBEORNOTTOBEORTOBEORNOT"
-let compressed = LZW.compress(original.utf8.map({$0})).map { unit in
-    switch unit {
-    case .element(let value):
-        return UInt(value)
-    case .index(let index):
-        return UInt(UInt8.max) + UInt(index)
+func compress(_ original: String) -> [UInt] {
+    LZW.compress(original.utf8.map({$0})).map { unit in
+        switch unit {
+        case .element(let value):
+            return UInt(value)
+        case .index(let index):
+            return UInt(UInt8.max) + UInt(index)
+        }
     }
 }
+
+let compressed = compress("TOBEORNOTTOBEORTOBEORNOT")
 print(compressed)
 ```
 
