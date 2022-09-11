@@ -2,6 +2,21 @@ import XCTest
 @testable import LZW
 
 final class LZWTests: XCTestCase {
+    
+    func testClassic() throws {
+        let original = "TOBEORNOTTOBEORTOBEORNOT"
+        let compressed = LZW.compress(original.utf8.map({$0})).map { unit in
+            switch unit {
+            case .element(let value):
+                return UInt(value)
+            case .index(let index):
+                return UInt(UInt8.max) + UInt(index)
+            }
+        }
+        XCTAssertEqual(compressed, [84, 79, 66, 69, 79, 82, 78, 79, 84, 255, 257, 259, 264, 258, 260, 262])
+    }
+    
+    
     func testStrings() throws {
         
         func test(original: String) throws {
@@ -10,6 +25,7 @@ final class LZWTests: XCTestCase {
             XCTAssertEqual(original, decompressed)
         }
 
+        try test(original: "TOBEORNOTTOBEORTOBEORNOT")
         try test(original: "TOBEORNOTTOBEORTOBEORNOTOTOTO")
         try test(original: "ABCABF")
         try test(original: "AAAAAAAAAAAAAAAAAAAAAAAAAAAAA")
