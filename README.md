@@ -1,14 +1,19 @@
 # LZW
 
+This project's purpose was to educate me (jjrscott) on how the LZW works. While build this project I realised that the LZW algorithm as originally states has two distinct parts:
+
+1. encoding characters into an alphabet and pre-populating a prefix table,
+2. (the part normally though of as LZW) expanding the prefix table and encoding table indexes into an output stream.
+
+I can use Swift's `enum` to abstract away the need for a pre-populated string table / alphabet to reveal the algorthim in a more pure form.
+
+## Rosetta Code
+
 From [Rosetta Code](https://rosettacode.org/wiki/LZW_compression):
 
 > The Lempel-Ziv-Welch (LZW) algorithm provides loss-less data compression.
 >
 > You can read a complete description of it in the [Wikipedia article](https://en.wikipedia.org/wiki/Lempel-Ziv-Welch) on the subject. It was patented, but it entered the public domain in 2004.
-
-## Project
-
-This project's purpose was to educate me (jjrscott) on how the LZW works. While build this project I realised that I can use Swift's `enum` to abstract away the need for a pre-populated string table / alphabet to reveal the algorthim in a more pure form.
 
 ### Classic example
 
