@@ -4,21 +4,23 @@ import XCTest
 final class LZWTests: XCTestCase {
     
     func testClassic() throws {
-        func compress(_ original: String) -> [UInt] {
-            LZW.compress(original.utf8.map({$0})).map { unit in
-                switch unit {
-                case .element(let value):
-                    return UInt(value)
-                case .index(let index):
-                    return UInt(UInt8.max) + UInt(index)
-                }
+        let original = "TOBEORNOTTOBEORTOBEORNOT"
+        
+        let compressed = LZW.compress(original.utf8.map({$0}))
+        
+        XCTAssertEqual(compressed, [.element(84), .element(79), .element(66), .element(69), .element(79), .element(82), .element(78), .element(79), .element(84), .index(0), .index(2), .index(4), .index(9), .index(3), .index(5), .index(7)])
+        
+        let encoded = compressed.map { unit in
+            switch unit {
+            case .element(let value):
+                return UInt(value)
+            case .index(let index):
+                return UInt(UInt8.max) + UInt(index)
             }
         }
         
-        let compressed = compress("TOBEORNOTTOBEORTOBEORNOT")
-        XCTAssertEqual(compressed, [84, 79, 66, 69, 79, 82, 78, 79, 84, 255, 257, 259, 264, 258, 260, 262])
+        XCTAssertEqual(encoded, [84, 79, 66, 69, 79, 82, 78, 79, 84, 255, 257, 259, 264, 258, 260, 262])
     }
-    
     
     func testStrings() throws {
         
