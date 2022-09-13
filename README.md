@@ -43,7 +43,9 @@ print("encoded: \(encoded)")
 **Output:**
 
 ```
-compressed: [.element(84), .element(79), .element(66), .element(69), .element(79), .element(82), .element(78), .element(79), .element(84), .index(0), .index(2), .index(4), .index(9), .index(3), .index(5), .index(7)]
+compressed: [.element(84), .element(79), .element(66), .element(69), .element(79),
+             .element(82), .element(78), .element(79), .element(84), .index(0),
+             .index(2), .index(4), .index(9), .index(3), .index(5), .index(7)]
 encoded: [84, 79, 66, 69, 79, 82, 78, 79, 84, 256, 258, 260, 265, 259, 261, 263]
 ```
 
