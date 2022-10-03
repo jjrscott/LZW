@@ -1,6 +1,13 @@
 import XCTest
 @testable import LZW
 
+func test<T>(value: [T], compressedValue: [LZW.Unit<T>]) throws {
+    let compressed = LZW.compress(value)
+    XCTAssertEqual(compressed, compressedValue)
+    let decompressed = try LZW.decompress(compressed)
+    XCTAssertEqual(value, decompressed)
+}
+
 final class LZWTests: XCTestCase {
     
     func testClassic() throws {
@@ -38,14 +45,7 @@ final class LZWTests: XCTestCase {
     }
     
     func testNumbers() throws {
-        
-        func test<T>(value: [T], compressedValue: [LZW.Unit<T>]) throws {
-            let compressed = LZW.compress(value)
-            XCTAssertEqual(compressed, compressedValue)
-            let decompressed = try LZW.decompress(compressed)
-            XCTAssertEqual(value, decompressed)
-        }
-        
+
         try test(value: [10, 10, 20, -40, 10, 10, 9, 35, 10],
                  compressedValue: [.element(10), .element(10), .element(20), .element(-40), .index(0), .element(9), .element(35), .element(10)])
         
@@ -62,5 +62,24 @@ final class LZWTests: XCTestCase {
 
         try test(compressedValue: [.element(10), .index(1)])
         try test(compressedValue: [.index(0)])
+    }
+    
+    func testBase20() throws {
+        
+        enum Foo: Int {
+            case pad, null, push, pop, _0, _1, _2, _3, _4, _5, _6, _7, _8, _9, _a, _b, _c, _d, _e, _f
+        }
+
+        let original = "TOBEORNOTTOBEORTOBEORNOT"
+        
+        var foo = [Foo]()
+        
+        for s in original.utf8.map({Int($0)}) {
+            foo.append(Foo(rawValue: (s % 16) + 4)!)
+            foo.append(Foo(rawValue: (s / 16) + 4)!)
+        }
+        
+        try test(value: foo,
+                 compressedValue: [.element(._4), .element(._5), .element(._f), .element(._4), .element(._2), .index(0), .element(._4), .index(2), .element(._2), .element(._5), .element(._e), .index(6), .element(._4), .index(5), .index(1), .index(3), .index(5), .index(7), .element(._5), .index(0), .index(7), .index(16), .index(3), .index(9), .index(11), .index(0)])
     }
 }
